@@ -51,7 +51,7 @@ class BackgroundProcess
         $tmp = tempnam("./", ".pid");
         $cmd = sprintf("%s > %s 2>&1 & echo $! >> %s", $this->getCommand() , escapeshellarg($this->getOutputFile()), escapeshellarg( $tmp ));
         exec($cmd);
-        $this->processID = file_get_contents($tmp);
+        $this->processID = trim(file_get_contents($tmp)) * 1;
         unlink($tmp);
     }
 
