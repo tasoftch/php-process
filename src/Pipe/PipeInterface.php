@@ -21,29 +21,22 @@
  * SOFTWARE.
  */
 
-namespace TASoft\Util\Exception;
+namespace TASoft\Util\Pipe;
 
 
-use TASoft\Util\Pipe\PipeInterface;
-
-class PipeException extends ProcessException
+interface PipeInterface
 {
-    /** @var PipeInterface|null */
-    private $pipe;
+    /**
+     * Receives data from another process. If $blockThread is set to true, this method blocks until data was sent.
+     *
+     * @param bool $blockThread     Blocks the thread until data is available
+     * @return mixed
+     */
+    public function receiveData(bool $blockThread = true);
 
     /**
-     * @return PipeInterface|null
+     * Sends data to the other end of pipe, means another process
+     * @param $data
      */
-    public function getPipe(): PipeInterface
-    {
-        return $this->pipe;
-    }
-
-    /**
-     * @param PipeInterface|null $pipe
-     */
-    public function setPipe(PipeInterface $pipe)
-    {
-        $this->pipe = $pipe;
-    }
+    public function sendData($data);
 }

@@ -24,97 +24,15 @@
 namespace TASoft\Util;
 
 
-use TASoft\Util\Exception\PipeException;
+use TASoft\Util\Pipe\UnixPipe;
 
 /**
  * The pipe allows communication between forked processes, because they don't share the same memory, direct accessing
  * each other is not possible.
  * The pipe MUST be created before forking a process, and then pass it to both.
  * @package Ikarus
+ * @deprecated
  */
-class Pipe
+class Pipe extends UnixPipe
 {
-    const BUFFER_SIZE = 2048;
-
-    private $receiver;
-    private $sender;
-
-    /**
-     * Pipe constructor.
-     */
-    public function __construct()
-    {
-        if(socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $fd))
-            list($this->receiver, $this->sender) = $fd;
-        else {
-            $e = new PipeException("Could not create communication sockets");
-            $e->setPipe($this);
-            throw $e;
-        }
-    }
-
-    /**
-     * Sends data to the other end of pipe, means another process
-     * @param $data
-     */
-    public function sendData($data) {
-        $data = serialize($data);
-        if(socket_write($this->sender, $data, strlen($data)))
-            return;
-
-        $err = socket_last_error($this->sender);
-        $e = new PipeException(socket_strerror($err), $err);
-        $e->setPipe($this);
-        throw $e;
-    }
-
-    /**
-     * Receives data from another process. This method blocks until data was sent.
-     *
-     * @param bool $blockThread     Blocks the thread until data is available
-     * @return mixed
-     */
-    public function receiveData(bool $blockThread = true) {
-        if($blockThread) {
-            $reader = function($socket) {
-                if(@feof($socket))
-                    return NULL;
-
-                $buf = "";
-                declare(ticks=1) {
-                    while ($out = socket_read($socket, static::BUFFER_SIZE)) {
-                        $buf .= $out;
-                        if(strlen($out) < static::BUFFER_SIZE) {
-                            break;
-                        }
-                    }
-                }
-                return $buf;
-            };
-        } else {
-            $reader = function ($socket) {
-                $buffer = "";
-                do {
-                    socket_recv($socket, $buf, 1024, MSG_DONTWAIT);
-                    if ($buf) {
-                        $buffer .= $buf;
-                    }
-                } while ($buf);
-                return $buffer;
-            };
-        }
-
-
-        $data = $reader($this->receiver);
-        return unserialize($data);
-    }
-
-    /**
-     * Close the sockets now
-     */
-    public function __destruct()
-    {
-        socket_close($this->sender);
-        socket_close($this->receiver);
-    }
 }

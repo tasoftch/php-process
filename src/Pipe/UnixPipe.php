@@ -21,29 +21,27 @@
  * SOFTWARE.
  */
 
-namespace TASoft\Util\Exception;
+namespace TASoft\Util\Pipe;
 
 
-use TASoft\Util\Pipe\PipeInterface;
+use TASoft\Util\Exception\PipeException;
 
-class PipeException extends ProcessException
+class UnixPipe extends AbstractPipe
 {
-    /** @var PipeInterface|null */
-    private $pipe;
-
-    /**
-     * @return PipeInterface|null
-     */
-    public function getPipe(): PipeInterface
+    protected function setupPipe(&$sender, &$receiver)
     {
-        return $this->pipe;
+        if(socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $fd))
+            list($receiver, $sender) = $fd;
+        else {
+            $e = new PipeException("Could not create communication sockets");
+            $e->setPipe($this);
+            throw $e;
+        }
     }
 
-    /**
-     * @param PipeInterface|null $pipe
-     */
-    public function setPipe(PipeInterface $pipe)
+    protected function cleanupPipe($sender, $receiver)
     {
-        $this->pipe = $pipe;
+        socket_close($sender);
+        socket_close($receiver);
     }
 }
