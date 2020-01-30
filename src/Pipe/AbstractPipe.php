@@ -64,7 +64,10 @@ abstract class AbstractPipe implements PipeInterface
 
                 $buf = "";
                 declare(ticks=1) {
+                    pcntl_async_signals(true);
                     while ($out = socket_read($socket, static::BUFFER_SIZE)) {
+                        pcntl_signal_dispatch();
+
                         $buf .= $out;
                         if(strlen($out) < static::BUFFER_SIZE) {
                             break;
